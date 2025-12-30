@@ -1,5 +1,3 @@
-package assignments.Ex3;
-
 /**
  * This class represents a 2D map as a "screen" or a raster matrix or maze over integers.
  * @author boaz.benmoshe
