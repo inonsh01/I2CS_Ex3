@@ -14,6 +14,7 @@ public class GameInfo {
 	private static PacManAlgo _myAlgo = new Ex3Algo();
 //    public static final PacManAlgo ALGO = _manualAlgo;
 	public static final PacManAlgo ALGO = _myAlgo;
-    public static final int SAFETY_RANGE = 5;
-    public static final int MAX_GREEN_DISTANCE = 5;
+    public static final int SAFETY_RANGE = 10;
+    public static final int TOO_CLOSE = 3;
+    public static final int MAX_GREEN_DISTANCE = 8;
 }

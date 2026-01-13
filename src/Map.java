@@ -212,7 +212,7 @@ public class Map implements Map2D {
 	 * BFS like shortest the computation based on iterative raster implementation of BFS, see:
 	 * https://en.wikipedia.org/wiki/Breadth-first_search
 	 */
-	public Pixel2D[] shortestPath(Pixel2D p1, Pixel2D p2, int obsColor) {
+	public Pixel2D[] shortestPath(Pixel2D p1, Pixel2D p2, int obsColor, boolean cyclic) {
 		Pixel2D[] ans = null;  // the result.
 		/////// add your code below ///////
         int width = getWidth();
@@ -250,7 +250,7 @@ public class Map implements Map2D {
             }
 
             for (int i = 0; i < 4; i++) {
-                Pixel2D next = getNextPixel(curr, dx[i], dy[i], width, height, this._cyclicFlag);
+                Pixel2D next = getNextPixel(curr, dx[i], dy[i], width, height, cyclic);
 
                 if (next != null) {
                     int nx = next.getX();
@@ -288,7 +288,7 @@ public class Map implements Map2D {
 
 	@Override
 	/////// add your code below ///////
-	public Map2D allDistance(Pixel2D start, int obsColor) {
+	public Map2D allDistance(Pixel2D start, int obsColor,  boolean cyclic) {
 		Map2D ans = null;  // the result.
 		/////// add your code below ///////
 
@@ -324,7 +324,7 @@ public class Map implements Map2D {
 
             // check all four neighbors
             for (int i = 0; i < 4; i++) {
-                Pixel2D next = getNextPixel(curr, dx[i], dy[i], width, height, this._cyclicFlag);
+                Pixel2D next = getNextPixel(curr, dx[i], dy[i], width, height, cyclic);
 
                 if (next != null) {
                     int nx = next.getX();
