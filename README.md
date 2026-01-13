@@ -41,7 +41,7 @@ function executeMove(goal,dist):
             path = findEscapePath(pacman, nearestGhost, dist);
         
     if(path == null || path.size() <= 1)
-        return // explode :)
+        return random // explode :)
         
     nextPosition = path[1]
     moveToPosition(nextPosition)
@@ -49,14 +49,10 @@ function executeMove(goal,dist):
 ### Target Selection
 ```
 function getClosest(color, dist):
-    targets = getAll(color)
-    if(targets.isEmpty()) 
-        return null
-        
-    closest = targets[0]
-    for(dot in targets)
-        if(dist[dot.x][dot.y] < dist[closest.x][closest.y])
-            closest = dot
+    for(i < board_width)
+        for(j < board_height)
+            if(pixelFromBoard == color && dist.getPixel < closest
+                closest = pixel    
     return closest
 ```
 
