@@ -5,14 +5,11 @@ import exe.ex3.game.PacManAlgo;
 import exe.ex3.game.PacmanGame;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Objects;
 
 /**
  * This is the major algorithmic class for Ex3 - the PacMan game:
- *
  * This code is a very simple example (random-walk algorithm).
  * Your task is to implement (here) your PacMan algorithm.
  */
@@ -232,7 +229,69 @@ public class Ex3Algo implements PacManAlgo {
             board.setPixel(entry.getKey().getX(), entry.getKey().getY(), entry.getValue());
         }
 
+        if(path == null){
+            path = panicMode(board, pacman, ghost,obsColor);
+        }
         return path;
+    }
+
+
+    /**
+     * Finds the single best move to maximize distance from the ghost
+     * when no safe path to a target is available.
+     *
+     * @param board The current board map
+     * @param pacman The current position of the PacMan
+     * @param ghost The closest ghost
+     * @param obsColor The obstacle color
+     */
+    public Pixel2D[] panicMode(Map2D board, Pixel2D pacman, Pixel2D ghost, int obsColor) {
+        int width = board.getWidth();
+        int height = board.getHeight();
+
+        // possible moves: Up, Down, Right, Left
+        int[][] moves = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+
+        Pixel2D bestMove = null;
+        double maxDistance = -1;
+
+        for (int[] m : moves) {
+            int nx, ny;
+
+            if (GameInfo.CYCLIC_MODE) {
+                nx = (pacman.getX() + m[0] + width) % width;
+                ny = (pacman.getY() + m[1] + height) % height;
+            } else {
+                nx = pacman.getX() + m[0];
+                ny = pacman.getY() + m[1];
+
+                // boundary check for non-cyclic mode
+                if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+                    continue;
+                }
+            }
+
+            // check if cell is not an obstacle
+            if (board.getPixel(nx, ny) != obsColor) {
+                Pixel2D candidate = new Index2D(nx, ny);
+
+                // calculate distance to the ghost
+                double distFromGhost = candidate.distance2D(ghost);
+
+                // track of the move that provides the maximum distance
+                if (distFromGhost > maxDistance) {
+                    maxDistance = distFromGhost;
+                    bestMove = candidate;
+                }
+            }
+        }
+
+        // return a path (current position -> best escape move)
+        if (bestMove != null) {
+            return new Pixel2D[]{pacman, bestMove};
+        }
+
+        return null; // no possible moves (trapped)
     }
 
     /**
@@ -267,7 +326,7 @@ public class Ex3Algo implements PacManAlgo {
      * Checks if there is green dot close to Pacman
      *
      * @param board The board map
-     * @param distanceMap A all distance Map of current board
+     * @param distanceMap An all distance Map of current board
      * @param pacman The pacman position
      * @param ghost The closest ghost pixel
      * @param code The code of colors
@@ -278,26 +337,24 @@ public class Ex3Algo implements PacManAlgo {
         if(board == null || distanceMap == null || pacman == null || ghost == null) return false;
 
         Pixel2D green = getClosest(board, distanceMap, Game.getIntColor(Color.GREEN, code));
-
-        if(green == null)
-            return false;
-
+        if(green == null) return false;
         int closetsGhostDistance = distanceMap.getPixel(ghost.getX(),ghost.getY());
         int closetsGreenDistance = distanceMap.getPixel(green.getX(),green.getY());
 
-        if(sameDirection(board, pacman, green, ghost, obsColor)) {
-            return (closetsGreenDistance < (closetsGhostDistance / 2));
-        }
-        else {
-            return (closetsGhostDistance <= GameInfo.MAX_GREEN_DISTANCE);
-        }
+        if(closetsGreenDistance > GameInfo.MAX_GREEN_DISTANCE)
+            return false;
+
+        if(!sameDirection(board, pacman, green, ghost, obsColor))
+            return true;
+
+        return (closetsGreenDistance < (closetsGhostDistance / 2));
     }
 
     /**
      * Returns the closest pixel of a given color
      *
      * @param board The board map
-     * @param distanceMap A all distance Map of current board
+     * @param distanceMap An all distance Map of current board
      * @param color required color to search the closest
      * @return the closest asking element
      */
