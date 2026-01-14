@@ -36,9 +36,11 @@ function executeMove(goal,dist):
 
     path = shortestPath(pacman, getClosest(goal, dist))
     if(goal == "run")
-        // Check if path goes in same direction as ghost
-        if(path != null && path.size() > 1 && sameDirection(pacman, path[1], pacman, ghost)
-            path = findEscapePath(pacman, nearestGhost, dist);
+            path = findEscapePath(pacman, nearestGhost, nearestPink)
+    else if(goal = "hunt")
+            path = board.shortestPath(closestGhost)
+    else
+        path = board.shortestPath(goal == "pink" ? pink : green);
         
     if(path == null || path.size() <= 1)
         return random // explode :)
@@ -62,12 +64,13 @@ function isGreenClose(dist):
     green = getClosest("green", dist)
     if(green == null) 
         return false
-        
+    
+    if(dist[green.x][green.y] > MAX_GREEN_DISTANCE) return false
+    
     // safety: check if ghost is blocking the path
-    if(sameDirection(pacman, green, pacman, ghost))
-        return (dist[green.x][green.y] < (ghostDistance / 2))
-    else
-        return (dist[green.x][green.y] <= MAX_GREEN_DISTANCE)
+    if(!sameDirection(pacman, green, pacman, ghost)) return true 
+    return (dist[green.x][green.y] < (ghostDistance / 2))
+    
 ```
 
 ### Escape Algorithm
@@ -82,8 +85,27 @@ function findEscapePath(pacman, ghost, dist):
     // restore board
     board[ghostPos.x][ghostPos.y] = originalValue
     
-    if(path != null && path.size() > 1)
-        return path
+    if(path == null)
+        path = panikMode()
+    return path
+   
+// find the best safe path as a last resort   
+function panikMode(board, pacman, ghost):
+    maxDist = -1
+    bestMove = null
+
+    for each direction in [UP, DOWN, LEFT, RIGHT]:
+        nextPos = getNextPosition(pacman, direction)
+        if (isOutsideBoundaries(nextPos)) continue
+        
+        if (board[nextPos] != obsColor):
+            currentDist = distance(nextPos, ghost)
+            if (currentDist > maxDist):
+                maxDist = currentDist
+                bestMove = nextPos
+
+    if (bestMove != null) return [pacman, bestMove]
+    return null
 ```
 
 ### Ghost
