@@ -7,6 +7,7 @@ import exe.ex3.game.PacmanGame;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Objects;
 
 /**
@@ -64,7 +65,7 @@ public class Ex3Algo implements PacManAlgo {
             int up = Game.UP, left = Game.LEFT, down = Game.DOWN, right = Game.RIGHT;
         }
         _count++;
-        Map _map = new Map(board);
+        Map2D _map = new Map(board);
         String[] posArr = pos.split(",");
         int pacX = Integer.parseInt(posArr[0]);
         int pacY = Integer.parseInt(posArr[1]);
@@ -85,7 +86,7 @@ public class Ex3Algo implements PacManAlgo {
         Pixel2D closestGhostPixel = new Index2D(currGhX, currGhY);
 
         if (pacPos.distance2D(closestGhostPixel) < GameInfo.SAFETY_RANGE) {
-            if(closestGhost.remainTimeAsEatable(code) > 1){
+            if(closestGhost.remainTimeAsEatable(code) > 2){
                 goal = "pink";
                 if(pacPos.distance2D(closestGhostPixel) < GameInfo.TOO_CLOSE) {
                     goal = "hunt";
@@ -123,7 +124,9 @@ public class Ex3Algo implements PacManAlgo {
         return dirs[ind];
     }
 
-    ////////////////////// Private Methods ///////////////////////
+    ////////////////////// My Methods ///////////////////////
+
+    // I made them public for testing
 
     /**
      * The Main function that runs the all algorithm, it calculates the best next move
@@ -138,7 +141,7 @@ public class Ex3Algo implements PacManAlgo {
      *
      * @return direction of the next move
      */
-    private int getDirection(Map2D board, Map2D distanceMap, Pixel2D closestGhost, Pixel2D pacman, String goal, int code, int obsColor) {
+    public int getDirection(Map2D board, Map2D distanceMap, Pixel2D closestGhost, Pixel2D pacman, String goal, int code, int obsColor) {
         int color = 1;
         Pixel2D[] path;
 
@@ -194,14 +197,41 @@ public class Ex3Algo implements PacManAlgo {
      *
      * @return A path to run away
      */
-    private Pixel2D[] findEscapePath(Map2D board, Map2D distanceMap, Pixel2D pacman, Pixel2D ghost, int code, int obsColor) {
+    public Pixel2D[] findEscapePath(Map2D board, Map2D distanceMap, Pixel2D pacman, Pixel2D ghost, int code, int obsColor) {
+        java.util.Map<Pixel2D, Integer> originalValues = new java.util.HashMap<>();
 
-        int originalValue = board.getPixel(ghost.getX(),ghost.getY());
-        board.setPixel(ghost.getX(),ghost.getY(), obsColor);
-        Pixel2D[] path = board.shortestPath(pacman, getClosest(board, distanceMap,Game.getIntColor(Color.PINK, code)), obsColor, GameInfo.CYCLIC_MODE);
+        int[][] directions = {{0,0}, {0,1}, {0,-1}, {1,0}, {-1,0}};
 
-        // restore board
-        board.setPixel(ghost.getX(),ghost.getY(), originalValue);
+        int width = board.getWidth();
+        int height = board.getHeight();
+
+        for (int[] dir : directions) {
+            int nx, ny;
+            if (GameInfo.CYCLIC_MODE) {
+                nx = (ghost.getX() + dir[0] + width) % width;
+                ny = (ghost.getY() + dir[1] + height) % height;
+            } else {
+                nx = ghost.getX() + dir[0];
+                ny = ghost.getY() + dir[1];
+
+                if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+                    continue;
+                }
+            }
+
+            Pixel2D p = new Index2D(nx, ny);
+            originalValues.put(p, board.getPixel(nx, ny));
+            board.setPixel(nx, ny, obsColor);
+        }
+
+        Pixel2D target = getClosest(board, distanceMap, Game.getIntColor(Color.PINK, code));
+        Pixel2D[] path = board.shortestPath(pacman, target, obsColor, GameInfo.CYCLIC_MODE);
+
+        // restore original map
+        for (java.util.Map.Entry<Pixel2D, Integer> entry : originalValues.entrySet()) {
+            board.setPixel(entry.getKey().getX(), entry.getKey().getY(), entry.getValue());
+        }
+
         return path;
     }
 
@@ -213,7 +243,7 @@ public class Ex3Algo implements PacManAlgo {
      * @param code Array of GhostCL
      * @return A pixel of the closest ghost
      */
-    private GhostCL getClosestGhost(Pixel2D pacman, GhostCL[] ghosts, int code) {
+    public GhostCL getClosestGhost(Pixel2D pacman, GhostCL[] ghosts, int code) {
         if (ghosts.length == 0 || pacman == null) return null;
         double minDist = Double.MAX_VALUE;
         GhostCL ghost = null;
@@ -244,7 +274,7 @@ public class Ex3Algo implements PacManAlgo {
      * @param obsColor Obstacle color of the game
      * @return A number of the distance of the closest ghost
      */
-    private boolean isGreenClose( Map2D board, Map2D distanceMap,Pixel2D pacman, Pixel2D ghost, int code, int obsColor ) {
+    public boolean isGreenClose( Map2D board, Map2D distanceMap,Pixel2D pacman, Pixel2D ghost, int code, int obsColor ) {
         if(board == null || distanceMap == null || pacman == null || ghost == null) return false;
 
         Pixel2D green = getClosest(board, distanceMap, Game.getIntColor(Color.GREEN, code));
@@ -271,7 +301,7 @@ public class Ex3Algo implements PacManAlgo {
      * @param color required color to search the closest
      * @return the closest asking element
      */
-    private Pixel2D getClosest(Map2D board, Map2D distanceMap, int color) {
+    public Pixel2D getClosest(Map2D board, Map2D distanceMap, int color) {
         if(board == null || distanceMap == null) return null;
 
         Pixel2D closest = null;
@@ -292,12 +322,12 @@ public class Ex3Algo implements PacManAlgo {
      *
      * @param board The game board
      * @param src The source pixel
-     * @param dist1 The first destination
-     * @param dist2 The second destination
+     * @param dest1 The first destination
+     * @param dest2 The second destination
      * @param obsColor Obstacle color of the game
      * @return boolean sameDirection value
      */
-    private boolean sameDirection(Map2D board, Pixel2D src, Pixel2D dist1, Pixel2D dist2, int obsColor) {
-        return (board.shortestPath(src,dist1, obsColor,GameInfo.CYCLIC_MODE)[0].equals(board.shortestPath(src,dist2, obsColor, GameInfo.CYCLIC_MODE)[0]));
+    public boolean sameDirection(Map2D board, Pixel2D src, Pixel2D dest1, Pixel2D dest2, int obsColor) {
+        return (board.shortestPath(src,dest1, obsColor,GameInfo.CYCLIC_MODE)[1].equals(board.shortestPath(src,dest2, obsColor, GameInfo.CYCLIC_MODE)[1]));
     }
 }

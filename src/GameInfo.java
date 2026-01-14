@@ -5,7 +5,7 @@ import exe.ex3.game.PacManAlgo;
  */
 public class GameInfo {
 	public static final String MY_ID = "323071977";
-	public static final int CASE_SCENARIO = 1; // [0,4]
+	public static final int CASE_SCENARIO = 4; // [0,4]
 	public static final long RANDOM_SEED = 31; // Random seed
 	public static final boolean CYCLIC_MODE = true;
 	public static final int DT = 50; // [20,200]
@@ -14,7 +14,7 @@ public class GameInfo {
 	private static PacManAlgo _myAlgo = new Ex3Algo();
 //    public static final PacManAlgo ALGO = _manualAlgo;
 	public static final PacManAlgo ALGO = _myAlgo;
-    public static final int SAFETY_RANGE = 10;
-    public static final int TOO_CLOSE = 3;
-    public static final int MAX_GREEN_DISTANCE = 8;
+    public static final int SAFETY_RANGE = (int) Math.floor(CASE_SCENARIO * 2.5);
+    public static final int TOO_CLOSE = 2;
+    public static final int MAX_GREEN_DISTANCE = 7;
 }

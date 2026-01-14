@@ -215,6 +215,9 @@ public class Map implements Map2D {
 	public Pixel2D[] shortestPath(Pixel2D p1, Pixel2D p2, int obsColor, boolean cyclic) {
 		Pixel2D[] ans = null;  // the result.
 		/////// add your code below ///////
+
+        if(p1 == null || p2 == null) return null;
+
         int width = getWidth();
         int height = getHeight();
 
