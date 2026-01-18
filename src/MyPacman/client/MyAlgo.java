@@ -38,6 +38,14 @@ public class MyAlgo {
      * @return The next move direction
      */
     public int move(MyPacmanGame game) {
+        if(game.getStatus() != MyPacmanGame.RUNNING) return -1;
+
+        // similar to DT
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - MyGame.getLastMoveTime() < MyGame.getMoveDelay()) {
+            return -1;
+        }
+
         int code = 0, pink, black, green;
         int[][] board = game.getGame(0);
         String pos = game.getPos(code).toString();
@@ -45,6 +53,7 @@ public class MyAlgo {
         MyGhost[] ghosts = game.getGhosts(code);
 
         if (_count == 0 || _count == 300) {
+            System.out.println("_count: " + _count);
             printBoard(board);
             pink = GameInfo.PINK;
             black = GameInfo.BLACK;
@@ -108,7 +117,7 @@ public class MyAlgo {
         }
     }
 
-    private static int randomDir() {
+    public static int randomDir() {
         int[] dirs = {MyGame.UP, MyGame.LEFT, MyGame.DOWN, MyGame.RIGHT};
         int ind = (int) (Math.random() * dirs.length);
         return dirs[ind];

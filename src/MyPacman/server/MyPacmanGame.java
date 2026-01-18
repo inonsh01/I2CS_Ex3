@@ -5,6 +5,8 @@ public interface MyPacmanGame {
     int LEFT = 2;
     int DOWN = 3;
     int RIGHT = 4;
+    int RUNNING = 1;
+
     void init();
     int getStatus();
     Character getKeyChar();

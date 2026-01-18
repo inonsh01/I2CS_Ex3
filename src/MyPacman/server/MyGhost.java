@@ -7,14 +7,12 @@ import exe.ex3.game.GhostCL;
 public class MyGhost implements GhostCL {
 
     private String _ghostPos;
+    private Pixel2D _ghostPx;
+    private int _prevValue;
     private double _remainTimeAsEatable = 0;
 
     public MyGhost(int x, int y) {
-        setPos(x, y);
-    }
-
-    public void setPos(int x, int y) {
-        this._ghostPos = x + "," + y;
+        setPx(x, y);
     }
 
     @Override
@@ -22,9 +20,30 @@ public class MyGhost implements GhostCL {
         return 0;
     }
 
+    public Pixel2D getPx() {
+        return this._ghostPx;
+    }
+
+    public void setPx(int x, int y) {
+        this._ghostPx = new Index2D(x, y);
+        setPos(x, y);
+    }
+
+    public int getPrevValue() {
+        return this._prevValue;
+    }
+
+    public void setPrevValue(int x) {
+        this._prevValue = x;
+    }
+
     @Override
     public String getPos(int i) {
         return this._ghostPos;
+    }
+
+    public void setPos(int x, int y) {
+        this._ghostPos = x + "," + y;
     }
 
     @Override

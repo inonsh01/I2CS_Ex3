@@ -24,6 +24,7 @@ public class MyMain {
                 System.out.println("Pacman help: keys: ' '-start, 'w,a,s,d'-directions, all other parameters should be configured via common.GameInfo.java, ");
             }
             int dir = man.move(game);
+            if(dir == -1) continue;
             game.move(dir);
         }
     }

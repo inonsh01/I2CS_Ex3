@@ -30,4 +30,5 @@ public class GameInfo {
     public static final int BLACK = 3;
     public static final int PACMAN = 4;
     public static final int GHOST = 5;
+    public static final int GHOST_NUMBER = 2;
 }
