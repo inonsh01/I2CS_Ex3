@@ -10,7 +10,7 @@ public class MyGame implements MyPacmanGame {
     public static final int INIT = 0;
     public static final int RUNNING = 1;
     public static final int DONE = 2;
-    private static final int _moveDelay = 50;
+    private static final int _moveDelay = 100;
 
     // --- Static Variables ---
     private static boolean win = false;
