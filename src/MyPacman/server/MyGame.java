@@ -9,7 +9,7 @@ public class MyGame implements MyPacmanGame {
     public static final int RUNNING = 1;
     public static final int DONE = 2;
     private long _lastMoveTime = System.currentTimeMillis();
-    private int _moveDelay = 200;
+    private final int _moveDelay = 200;
     
     private Map2D _map;
     private Pixel2D _pacman;
@@ -37,7 +37,7 @@ public class MyGame implements MyPacmanGame {
     
     @Override
     public Character getKeyChar() {
-        _keyChar = PacManGui.getKeyPressed(_keyChar);
+        _keyChar = PacManGui.getKeyPressed();
         return _keyChar;
     }
     
