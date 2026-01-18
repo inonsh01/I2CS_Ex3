@@ -114,7 +114,7 @@ function panikMode(board, pacman, ghost):
 ### Ghost
 ```
 function updateGhosts():
-    // Ghost behavior algorithm
+    randomDir();
 ```
 
 
