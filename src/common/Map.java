@@ -1,3 +1,5 @@
+package common;
+
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -41,7 +43,7 @@ public class Map implements Map2D {
 
         // edge cases
         if (w <= 0 || h <= 0)
-            throw new RuntimeException("Map2D init error: wrong dimensions");
+            throw new RuntimeException("common.Map2D init error: wrong dimensions");
 
         // create new map
         this._map = new int[w][h];
@@ -62,7 +64,7 @@ public class Map implements Map2D {
 
         // edge cases
         if (arr == null || arr.length == 0 || arr[0] == null)
-            throw new RuntimeException("Map2D init error: null or empty array");
+            throw new RuntimeException("common.Map2D init error: null or empty array");
 
         // create new map -> width = array length and height = one of the elements in
         // array length
@@ -121,7 +123,7 @@ public class Map implements Map2D {
 	/////// add your code below ///////
 	public int getPixel(int x, int y) {
         if (x < 0 || x >= getWidth() || y < 0 || y >= getHeight())
-            throw new RuntimeException("Map2D getPixel error: out of bounds");
+            throw new RuntimeException("common.Map2D getPixel error: out of bounds");
         return _map[x][y];
     }
 
@@ -142,7 +144,7 @@ public class Map implements Map2D {
 	/////// add your code below ///////
 	public void setPixel(Pixel2D p, int v) {
         if (p == null)
-            throw new RuntimeException("Map2D setPixel error: null pixel");
+            throw new RuntimeException("common.Map2D setPixel error: null pixel");
         this.setPixel(p.getX(), p.getY(), v);
 	}
 
@@ -291,7 +293,7 @@ public class Map implements Map2D {
 
 	@Override
 	/////// add your code below ///////
-	public Map2D allDistance(Pixel2D start, int obsColor,  boolean cyclic) {
+	public Map2D allDistance(Pixel2D start, int obsColor, boolean cyclic) {
 		Map2D ans = null;  // the result.
 		/////// add your code below ///////
 
@@ -360,7 +362,7 @@ public class Map implements Map2D {
      * @param width  The map width.
      * @param height The map height.
      * @param cyclic Whether the map is cyclic.
-     * @return A new Pixel2D representing the neighbor, or null if out of bounds.
+     * @return A new common.Pixel2D representing the neighbor, or null if out of bounds.
      */
     private Pixel2D getNextPixel(Pixel2D curr, int dx, int dy, int width, int height, boolean cyclic) {
 
@@ -388,7 +390,7 @@ public class Map implements Map2D {
      * @param p2     The ending pixel.
      * @param parent The parent map.
      *
-     * @return An array of Pixel2D representing the path from start to end.
+     * @return An array of common.Pixel2D representing the path from start to end.
      */
     private Pixel2D[] reconstructPath(Pixel2D p1, Pixel2D p2, Pixel2D[][] parent) {
         LinkedList<Pixel2D> pathList = new LinkedList<>();

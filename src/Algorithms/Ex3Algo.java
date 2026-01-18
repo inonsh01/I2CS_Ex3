@@ -1,11 +1,12 @@
+package Algorithms;
 
+import common.*;
 import exe.ex3.game.Game;
 import exe.ex3.game.GhostCL;
 import exe.ex3.game.PacManAlgo;
 import exe.ex3.game.PacmanGame;
 
 import java.awt.*;
-import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -326,14 +327,14 @@ public class Ex3Algo implements PacManAlgo {
      * Checks if there is green dot close to Pacman
      *
      * @param board The board map
-     * @param distanceMap An all distance Map of current board
+     * @param distanceMap An all distance common.Map of current board
      * @param pacman The pacman position
      * @param ghost The closest ghost pixel
      * @param code The code of colors
      * @param obsColor Obstacle color of the game
      * @return A number of the distance of the closest ghost
      */
-    public boolean isGreenClose( Map2D board, Map2D distanceMap,Pixel2D pacman, Pixel2D ghost, int code, int obsColor ) {
+    public boolean isGreenClose(Map2D board, Map2D distanceMap, Pixel2D pacman, Pixel2D ghost, int code, int obsColor ) {
         if(board == null || distanceMap == null || pacman == null || ghost == null) return false;
 
         Pixel2D green = getClosest(board, distanceMap, Game.getIntColor(Color.GREEN, code));
@@ -354,7 +355,7 @@ public class Ex3Algo implements PacManAlgo {
      * Returns the closest pixel of a given color
      *
      * @param board The board map
-     * @param distanceMap An all distance Map of current board
+     * @param distanceMap An all distance common.Map of current board
      * @param color required color to search the closest
      * @return the closest asking element
      */
@@ -385,6 +386,6 @@ public class Ex3Algo implements PacManAlgo {
      * @return boolean sameDirection value
      */
     public boolean sameDirection(Map2D board, Pixel2D src, Pixel2D dest1, Pixel2D dest2, int obsColor) {
-        return (board.shortestPath(src,dest1, obsColor,GameInfo.CYCLIC_MODE)[1].equals(board.shortestPath(src,dest2, obsColor, GameInfo.CYCLIC_MODE)[1]));
+        return (board.shortestPath(src,dest1, obsColor, GameInfo.CYCLIC_MODE)[1].equals(board.shortestPath(src,dest2, obsColor, GameInfo.CYCLIC_MODE)[1]));
     }
 }

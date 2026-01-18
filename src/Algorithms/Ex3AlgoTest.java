@@ -1,10 +1,14 @@
+package Algorithms;
+
+import common.*;
 import exe.ex3.game.Game;
 import exe.ex3.game.GhostCL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+
 import java.awt.*;
-import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class Ex3AlgoTest {
     private Map2D _map;

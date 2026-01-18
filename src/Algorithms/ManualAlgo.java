@@ -1,3 +1,6 @@
+package Algorithms;
+
+import EX3_2.Ex3Main;
 import exe.ex3.game.PacManAlgo;
 import exe.ex3.game.PacmanGame;
 

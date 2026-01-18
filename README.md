@@ -22,17 +22,20 @@ function move(game):
     dist[][] = allDistance()
     goal = "pink"
     
-    if(ghostDistance < SAFETY_RANGE)
-        if(isGreenClose(dist))
+    if(closestGhostDistance < SAFETY_RANGE)
+        if(closestGhost.remainTimeAsEatable(code) > MIN_TIME_EATABLE)
+            if(pacPos.distance2D(closestGhostPixel) < GameInfo.TOO_CLOSE)
+                goal = "hunt";
+        else if(isGreenClose(dist))
             goal = "green"
-        else 
+        else
             goal = "run"
-    executeMove(goal,dist)
+    return getDirection(goal,dist)
 ```
 
-### Movement Execution
+### Calculate Direction 
 ```
-function executeMove(goal,dist):
+function getDirection(goal,dist):
 
     path = shortestPath(pacman, getClosest(goal, dist))
     if(goal == "run")
@@ -159,6 +162,8 @@ class Index2D implements Pixel2D {
 1. **Assess Threat Level**: Calculate distance to nearest ghost
 2. **Priority Decision**:
     - If ghost too close → Escape or seek green dot
+    - - If ghosts are “eatable” and close hunt them
+    - - In last resort just run away
     - If safe → Target nearest pink dot
 3. **Path Planning**: Use BFS to find optimal route
 4. **Movement Execution**: Move one step toward target
@@ -166,6 +171,8 @@ class Index2D implements Pixel2D {
 ## Constants
 - `SAFETY_RANGE = 5` - Minimum safe distance from ghosts
 - `MAX_GREEN_DISTANCE = 5` - Maximum distance to consider green dots
+- `MIN_TIME_EATABLE = 2` - Minimum time for chasing after ghosts
+- `TOO_CLOSE = 2` - Distance from ghost for hunting
 
 ## Game Screenshots
 ![Normal Gameplay](images/normal_mode.png)
