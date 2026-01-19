@@ -175,12 +175,17 @@ class Index2D implements Pixel2D {
 - `TOO_CLOSE = 2` - Distance from ghost for hunting
 
 ## Game Screenshots
-![Normal Gameplay](images/normal_mode.png)
+![Normal Gameplay](images/normal_mode_example.png)
 *Pac-Man collecting pink dots while avoiding ghosts*
 
-![Power Mode](images/power_mode.png)
+![Power Mode](images/power_mode_example.png)
 *Pac-Man after eating green dot with vulnerable ghosts*
 
 ## Video Demonstration
-[![Pac-Man Algorithm Demo](images/demo_thumbnail.png)](videos/pacman_demo.mp4)
-*Click to view complete algorithm demonstration*
+## 🎥 Video Demonstrations
+
+### The Algorithm
+[![Watch Video 1](https://img.youtube.com/vi/LDVP_QkELck/0.jpg)](https://youtube.com/shorts/LDVP_QkELck)
+
+### Gameplay & Results
+[![Watch Video 1](https://img.youtube.com/vi/nyJoeLRAtuE/0.jpg)](https://youtube.com/shorts/nyJoeLRAtuE)

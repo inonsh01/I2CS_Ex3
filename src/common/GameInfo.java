@@ -12,7 +12,7 @@ public class GameInfo {
 	public static final int CASE_SCENARIO = 4; // [0,4]
 	public static final long RANDOM_SEED = 31; // Random seed
 	public static final boolean CYCLIC_MODE = true;
-	public static final int DT = 100; // [20,200]
+	public static final int DT = 70; // [20,200]
 	public static final double RESOLUTION_NORM = 1.2; // [0.75,1.2]
 	private static PacManAlgo _manualAlgo = new ManualAlgo();
 	private static PacManAlgo _myAlgo = new Ex3Algo();

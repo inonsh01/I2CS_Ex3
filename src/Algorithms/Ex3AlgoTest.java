@@ -62,12 +62,12 @@ public class Ex3AlgoTest {
     }
 
     @Test
-    public void findEscapePathTest() {
+    public void findSmartPathTest() {
         System.out.println("Testing findEscapePath()...");
         
         Pixel2D ghost = new Index2D(9, 8);
         Map2D distanceMap = _map.allDistance(pacman, blue, GameInfo.CYCLIC_MODE);
-        Pixel2D[] path = _algo.findEscapePath(_map, distanceMap, pacman, ghost, code, blue);
+        Pixel2D[] path = _algo.findSmartPath(_map, distanceMap, pacman, ghost,"pink", code, blue);
         assertNotNull(path);
 
         System.out.println("✓ findEscapePath() tests passed");

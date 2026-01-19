@@ -1,9 +1,13 @@
 package MyPacman.server;
 
-import MyPacman.client.MyAlgo;
+import Algorithms.MyAlgo;
 import common.*;
-import java.awt.*;
 
+/**
+ * The main engine for the Pacman game.
+ * This class handles the game loop, map generation, entity movement (Pacman and Ghosts),
+ * and win/loss conditions.
+ */
 public class MyGame implements MyPacmanGame {
 
     // --- Constants ---
@@ -11,6 +15,7 @@ public class MyGame implements MyPacmanGame {
     public static final int RUNNING = 1;
     public static final int DONE = 2;
     private static final int _moveDelay = 100;
+    private static final int PREDATOR_TIME_LIMIT = 5000;
 
     // --- Static Variables ---
     private static boolean win = false;
@@ -20,6 +25,9 @@ public class MyGame implements MyPacmanGame {
     private static MyGhost[] _ghosts;
     private static boolean isPredator = false;
 
+    // stores Pacman's current direction for GUI rotation
+    private static int _currentDir = 4; // Default RIGHT
+
     // --- Instance Variables ---
     private Map2D _map;
     private Pixel2D _pacman;
@@ -28,18 +36,28 @@ public class MyGame implements MyPacmanGame {
     private Character _keyChar;
     private final int mid = GameInfo.MAP_SIZE / 2;
 
+    /**
+     * Initializes the game state.
+     * creates the map, places Pacman and ghosts, and initializes graphics.
+     */
     @Override
     public void init() {
         _status = INIT;
         this._map = new Map(GameInfo.MAP_SIZE);
         this.setPinksCounter(0);
+
         this._pacman = new Index2D(this.mid, this.mid + 2);
+
         _ghosts = new MyGhost[GameInfo.GHOST_NUMBER];
         this.generateMap();
+
         PacManGui.initGraphics();
         this.drawBoard();
     }
 
+    /**
+     * starts the game loop by changing status from INIT to RUNNING.
+     */
     @Override
     public void play() {
         if (_status == INIT) {
@@ -47,26 +65,35 @@ public class MyGame implements MyPacmanGame {
         }
     }
 
+    /**
+     * The main game tick method.
+     * Moves ghosts, calculates Pacman's next move, and updates the board.
+     *
+     * @param dir The direction Pacman intends to move (UP, DOWN, LEFT, RIGHT).
+     */
     @Override
     public void move(int dir) {
         if (this.getStatus() != RUNNING) return;
 
-        // 1. Time Management (Speed Control)
+        // Time Management (Speed Control)
         long currentTime = System.currentTimeMillis();
         if (currentTime - _lastMoveTime < _moveDelay) {
             return;
         }
         _lastMoveTime = currentTime;
 
-        // 2. Predator Mode Timer
-        if (isPredator && currentTime - startPredatorTime > 5000) {
+        // update direction for GUI rotation
+        _currentDir = dir;
+
+        // predator mode timer check
+        if (isPredator && currentTime - startPredatorTime > PREDATOR_TIME_LIMIT) {
             setIsPredator(false);
         }
 
-        // 3. Move Ghosts First
+        // move ghosts first
         this.ghostsMove();
 
-        // 4. Calculate Pacman Next Position
+        // calculate pacman next position
         int nextX = this._pacman.getX();
         int nextY = this._pacman.getY();
 
@@ -77,19 +104,18 @@ public class MyGame implements MyPacmanGame {
             case RIGHT: nextX++; break;
         }
 
-        // 5. Move Pacman if Legal
+        // move pacman if the move is legal
         if (isLegalMove(nextX, nextY)) {
-            // Remove Pacman from old position
+            // remove Pacman from old position
             this._map.setPixel(_pacman, GameInfo.EMPTY);
 
-            // Cyclic calculation
+            // cyclic calculation for infinite map borders
             int x = (nextX + GameInfo.MAP_SIZE) % GameInfo.MAP_SIZE;
             int y = (nextY + GameInfo.MAP_SIZE) % GameInfo.MAP_SIZE;
 
-            // Update Logic (Eat coins, collisions etc.)
             this.updateMap(x, y);
 
-            // Set new position
+            // set new position
             _pacman = new Index2D(x, y);
             this._map.setPixel(_pacman, GameInfo.PACMAN);
 
@@ -97,13 +123,22 @@ public class MyGame implements MyPacmanGame {
         }
     }
 
+    /**
+     * Handles the interaction between Pacman and the content of the target pixel.
+     * This includes eating dots, picking up power-ups, and colliding with ghosts.
+     *
+     * @param x The x-coordinate of the target pixel.
+     * @param y The y-coordinate of the target pixel.
+     */
     private void updateMap(int x, int y) {
         int pixelContent = this._map.getPixel(x, y);
 
+        // clear the pixel (pacman eats the content)
         this._map.setPixel(x, y, GameInfo.EMPTY);
 
         switch (pixelContent) {
             case GameInfo.PINK:
+                // regular point collected
                 this.setPinksCounter(this.getPinksCounter() - 1);
 
                 if (this.getPinksCounter() == 0) {
@@ -114,24 +149,27 @@ public class MyGame implements MyPacmanGame {
                 break;
 
             case GameInfo.GREEN:
+                // power-up collected: Enter Predator Mode
                 this.setIsPredator(true);
                 startPredatorTime = System.currentTimeMillis();
                 break;
 
             case GameInfo.GHOST:
+                // collision with a Ghost
                 int ghostIdx = getGhostIndex(x, y);
                 if (ghostIdx != -1) {
                     if (getIsPredator()) {
-                        System.out.println("Ate a ghost!");
+                        // Predator Mode: Eat the ghost
 
                         // restore the value the ghost was hiding
                         this._map.setPixel(x, y, _ghosts[ghostIdx].getPrevValue());
 
-                        // reset the ghost to the center
+                        // reset the ghost to the "Ghost House" (center)
                         _ghosts[ghostIdx].setPx(this.mid, this.mid);
                         _ghosts[ghostIdx].setPrevValue(GameInfo.EMPTY);
                     } else {
-                        System.out.println("PACMAN DIED!");
+                        // normal Mode: Pacman dies
+                        System.out.println("PACMAN DIED! (Ran into ghost)");
                         lose = true;
                         this._status = DONE;
                     }
@@ -139,13 +177,18 @@ public class MyGame implements MyPacmanGame {
                 break;
         }
     }
+
+    /**
+     * Iterates through all ghosts and updates their positions.
+     * Handles ghost AI (random movement) and collisions if a ghost moves onto Pacman.
+     */
     private void ghostsMove() {
         for (int i = 0; i < _ghosts.length; i++) {
             Pixel2D currentPos = _ghosts[i].getPx();
             int nextX = currentPos.getX();
             int nextY = currentPos.getY();
 
-            // select random direction
+            // select random direction for the ghost
             int dir = MyAlgo.randomDir();
 
             switch (dir) {
@@ -161,69 +204,67 @@ public class MyGame implements MyPacmanGame {
             Pixel2D targetPos = new Index2D(targetX, targetY);
 
             if (isLegalMove(targetX, targetY)) {
-                // 1. Restore the map content at the ghost's previous position
+                // restore the map content at the ghost's previous position
                 this._map.setPixel(currentPos, _ghosts[i].getPrevValue());
 
-                // 2. Check what is in the target square BEFORE moving there
+                // check what is in the target square BEFORE moving there
                 int contentAtTarget = this._map.getPixel(targetPos);
 
                 // --- Scenario A: Ghost runs into Pacman ---
                 if (contentAtTarget == GameInfo.PACMAN) {
                     if (isPredator) {
-                        // If Pacman is a predator, this ghost dies.
-                        // Instead of moving, reset ghost to the starting box.
+                        // Ghost dies and resets to center
                         _ghosts[i].setPx(this.mid, this.mid);
                         _ghosts[i].setPrevValue(GameInfo.EMPTY);
-
-                        // We must re-draw the ghost at home immediately
                         this._map.setPixel(new Index2D(this.mid, this.mid), GameInfo.GHOST);
-
-                        // Pacman stays where he is (we don't overwrite him)
-                        continue; // Skip the rest of the loop for this ghost
+                        continue;
                     } else {
-                        // Normal mode: Ghost caught Pacman -> Game Over
-                        System.out.println("PACMAN DIED (Ghost ran into him)");
+                        // Pacman dies
+                        System.out.println("PACMAN DIED (Ghost caught him)");
                         lose = true;
                         this._status = DONE;
-
-                        // Ghost overwrites Pacman, so prevValue is effectively EMPTY
                         _ghosts[i].setPrevValue(GameInfo.EMPTY);
                     }
                 }
                 // --- Scenario B: Ghost runs into another Ghost ---
                 else if (contentAtTarget == GameInfo.GHOST) {
-                    // Find the other ghost to steal its 'prevValue'
-                    // (This prevents ghosts from erasing dots when they overlap)
                     int otherGhostIdx = getGhostIndex(targetX, targetY);
                     if (otherGhostIdx != -1 && otherGhostIdx != i) {
+                        // swap hidden values to prevent erasing dots
                         _ghosts[i].setPrevValue(_ghosts[otherGhostIdx].getPrevValue());
                     } else {
                         _ghosts[i].setPrevValue(GameInfo.EMPTY);
                     }
                 }
-                // --- Scenario C: Normal movement (Empty space, Dot, Power-up) ---
+                // --- Scenario C: Normal movement ---
                 else {
                     _ghosts[i].setPrevValue(contentAtTarget);
                 }
 
-                // 3. Move the ghost to the new position
+                // move the ghost to the new position
                 _ghosts[i].setPx(targetX, targetY);
                 this._map.setPixel(targetPos, GameInfo.GHOST);
             }
         }
     }
+
     // --- Getters & Setters ---
 
     @Override
     public int getStatus() { return _status; }
-    public static long getLastMoveTime() { return _lastMoveTime; }
-    public static long getMoveDelay() { return _moveDelay; }
     public static boolean getWin() { return win; }
     public static boolean getLose() { return lose; }
+    public static long getMoveDelay() { return _moveDelay; }
+    public static long getLastMoveTime() { return _lastMoveTime; }
     public int getPinksCounter() { return _pinksCounter; }
     public void setPinksCounter(int pinksCounter) { this._pinksCounter = pinksCounter; }
     public static boolean getIsPredator() { return isPredator; }
     public void setIsPredator(boolean _isPredator) { isPredator = _isPredator; }
+
+    /**
+     * @return The current direction of Pacman (used for GUI rotation).
+     */
+    public static int getPacmanDir() { return _currentDir; }
 
     @Override
     public Character getKeyChar() {
@@ -231,6 +272,14 @@ public class MyGame implements MyPacmanGame {
         return _keyChar;
     }
 
+    /**
+     * Finds the index of a ghost located at specific coordinates.
+     *
+     * @param x X coordinate.
+     * @param y Y coordinate.
+     *
+     * @return The index of the ghost in the array, or -1 if no ghost is found there.
+     */
     public static int getGhostIndex(int x, int y) {
         if (_ghosts == null) return -1;
         for (int i = 0; i < _ghosts.length; i++) {
@@ -245,10 +294,16 @@ public class MyGame implements MyPacmanGame {
     public MyGhost[] getGhosts(int code) { return _ghosts; }
     public int[][] getGame(int code) { return this._map.getMap(); }
 
+    /**
+     * Triggers the GUI to repaint the board.
+     */
     public void drawBoard() { PacManGui.drawBoard(this); }
 
     // --- Map Generation Methods ---
 
+    /**
+     * Generates the game map, including walls, dots, and ghost placement.
+     */
     @Override
     public void generateMap() {
         this.setObs();
@@ -263,6 +318,10 @@ public class MyGame implements MyPacmanGame {
         }
     }
 
+    /**
+     * Sets the obstacles (walls) on the map to create the maze layout.
+     * Uses symmetry to create a balanced map.
+     */
     private void setObs() {
         int size = GameInfo.MAP_SIZE;
         int mid = size / 2;
@@ -270,26 +329,26 @@ public class MyGame implements MyPacmanGame {
             for (int j = 0; j <= size; j++) {
                 int val = 0;
 
-                // Borders
+                // borders
                 if (i == 0 || j == 0 || j == size - 1) {
                     if (j != mid) val = -1;
                 }
-                // Shapes
+                // internal Shapes
                 else if ((j == 2 && i >= 2 && i <= 6) || (i == 2 && j >= 2 && j <= 5)) {
                     val = -1;
                 } else if ((j == size - 3 && i >= 2 && i <= 6) || (i == 2 && j >= size - 6 && j <= size - 3)) {
                     val = -1;
                 }
-                // Middle Line
+                // middle Line
                 else if (j == mid && i > 1 && i < 5) {
                     val = -1;
                 }
-                // Ghost House
+                // ghost house
                 if (this.isMiddleRect(i, j)) {
                     val = -1;
                 }
 
-                // Symmetric Set
+                // mirror the map
                 this._map.setPixel(i, j, val);
                 if (val == -1) {
                     this._map.setPixel(size - 1 - i, j, -1);
@@ -298,6 +357,10 @@ public class MyGame implements MyPacmanGame {
         }
     }
 
+    /**
+     * Places dots (points) and power-ups on the map.
+     * Skips walls, the ghost house, and Pacman's starting position.
+     */
     private void setDots() {
         int size = GameInfo.MAP_SIZE;
         int start = (size - 3) / 2;
@@ -305,16 +368,19 @@ public class MyGame implements MyPacmanGame {
 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
+                // ensure no dot is placed on Pacman's start position
                 if (i == _pacman.getX() && j == _pacman.getY()) {
                     continue;
                 }
 
+                // place power-ups (green dots) in corners
                 if ((i == 1 && (j == 1 || j == size - 2)) || (i == size - 2 && (j == 1 || j == size - 2))) {
                     _map.setPixel(i, j, GameInfo.GREEN);
                 }
-                else if (this._map.getPixel(i, j) != GameInfo.WALL) {
 
-                    // do not put dots inside ghost house
+                // place regular dots (pink) in empty spaces
+                else if (this._map.getPixel(i, j) != GameInfo.WALL) {
+                    // do not put dots inside the ghost house
                     if (!(i >= start && i < end && j >= start && j < end)) {
                         _map.setPixel(i, j, GameInfo.PINK);
                         this._pinksCounter++;
@@ -324,6 +390,14 @@ public class MyGame implements MyPacmanGame {
         }
     }
 
+    /**
+     * Checks if a coordinate is within the central "Ghost House" rectangle.
+     *
+     * @param i Row index.
+     * @param j Column index.
+     *
+     * @return true if inside the ghost house, false otherwise.
+     */
     private boolean isMiddleRect(int i, int j) {
         int startRow = (GameInfo.MAP_SIZE - 3) / 2;
         int startCol = (GameInfo.MAP_SIZE - 4) / 2;
@@ -331,6 +405,15 @@ public class MyGame implements MyPacmanGame {
                 (i == GameInfo.MAP_SIZE / 2 && j == (GameInfo.MAP_SIZE / 2 - 1)));
     }
 
+    /**
+     * Verifies if a move to the target coordinates is legal (not a wall and within bounds).
+     * Handles cyclic logic if enabled.
+     *
+     * @param x Target X coordinate.
+     * @param y Target Y coordinate.
+     *
+     * @return true if the move is allowed, false if it's a wall or out of bounds.
+     */
     private boolean isLegalMove(int x, int y) {
         int size = GameInfo.MAP_SIZE;
 

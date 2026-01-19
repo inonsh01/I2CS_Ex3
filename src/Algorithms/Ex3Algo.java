@@ -60,9 +60,9 @@ public class Ex3Algo implements PacManAlgo {
             System.out.println("Blue=" + blue + ", Pink=" + pink + ", Black=" + black + ", Green=" + green);
             System.out.println("Pacman coordinate: " + pos);
             printGhosts(ghosts);
-            int up = Game.UP, left = Game.LEFT, down = Game.DOWN, right = Game.RIGHT;
         }
         _count++;
+
         Map2D _map = new Map(board);
         String[] posArr = pos.split(",");
         int pacX = Integer.parseInt(posArr[0]);
@@ -72,32 +72,27 @@ public class Ex3Algo implements PacManAlgo {
         Map2D distanceMap = _map.allDistance(pacPos, blue, GameInfo.CYCLIC_MODE);
 
         String goal = "pink";
-
+        Pixel2D closestGhostPixel = null;
         GhostCL closestGhost = getClosestGhost(pacPos, ghosts, code);
 
-        assert closestGhost != null;
-        String[] currGhPosArr = closestGhost.getPos(code).split(",");
+        if (closestGhost != null) {
+            String[] currGhPosArr = closestGhost.getPos(code).split(",");
+            int currGhX = Integer.parseInt(currGhPosArr[0]);
+            int currGhY = Integer.parseInt(currGhPosArr[1]);
+            closestGhostPixel = new Index2D(currGhX, currGhY);
+            double distToGhost = pacPos.distance2D(closestGhostPixel);
 
-        int currGhX = Integer.parseInt(currGhPosArr[0]);
-        int currGhY = Integer.parseInt(currGhPosArr[1]);
-
-        Pixel2D closestGhostPixel = new Index2D(currGhX, currGhY);
-
-        if (pacPos.distance2D(closestGhostPixel) < GameInfo.SAFETY_RANGE) {
-            if(closestGhost.remainTimeAsEatable(code) > 2){
-                goal = "pink";
-                if(pacPos.distance2D(closestGhostPixel) < GameInfo.TOO_CLOSE) {
-                    goal = "hunt";
+            if (distToGhost < GameInfo.SAFETY_RANGE) {
+                if (closestGhost.remainTimeAsEatable(code) >= 1.5 && distToGhost < GameInfo.TOO_CLOSE) {
+                        goal = "hunt";
+                } else if (isGreenClose(_map, distanceMap, pacPos, closestGhostPixel, code, blue)) {
+                    goal = "green";
                 }
             }
-            else if (isGreenClose(_map, distanceMap, pacPos, closestGhostPixel, code, blue))
-                goal = "green";
-            else
-                goal = "run";
         }
-        return getDirection(new Map(board), distanceMap, closestGhostPixel, pacPos, goal, code, blue);
-    }
 
+        return getDirection(_map, distanceMap, closestGhostPixel, pacPos, goal, code, blue);
+    }
 
     private static void printBoard(int[][] b) {
         for (int y = 0; y < b[0].length; y++) {
@@ -143,14 +138,9 @@ public class Ex3Algo implements PacManAlgo {
         int color = 1;
         Pixel2D[] path;
 
-        if(Objects.equals(goal, "run")){
-            if (closestGhost == null) return 1;
-            path = findEscapePath(board, distanceMap,pacman, closestGhost, code, obsColor);
-        }
-        else if(Objects.equals(goal, "hunt")){
+        if (Objects.equals(goal, "hunt")) {
             path = board.shortestPath(pacman, closestGhost, obsColor, GameInfo.CYCLIC_MODE);
-        }
-        else{
+        } else {
             color = switch (goal) {
                 case "pink" -> Game.getIntColor(Color.PINK, code);
                 case "green" -> Game.getIntColor(Color.GREEN, code);
@@ -158,16 +148,16 @@ public class Ex3Algo implements PacManAlgo {
             };
 
             // get the shortest path to goal
-            path = board.shortestPath(pacman, getClosest(board, distanceMap,color), obsColor, GameInfo.CYCLIC_MODE);
+            path = findSmartPath(board, distanceMap, pacman, closestGhost, goal, code, obsColor);
         }
 
         // if still no path -> explode :)
-        if(path == null || path.length < 1){
+        if (path == null || path.length < 1) {
             return randomDir();
         }
 
         // pacman reached the goal
-        if(path.length == 1){
+        if (path.length == 1) {
             return Game.UP; // no reason
         }
 
@@ -182,7 +172,7 @@ public class Ex3Algo implements PacManAlgo {
     }
 
     /**
-     * This function's goal is to find the best escape path in case of 'running'
+     * This function's goal is to find the best smart path in case of 'running'
      * while this case the PacMan will try to find the shortest path to a pink dot,
      * using the shortest path algorithm by defining the ghost as an obstacle
      *
@@ -190,16 +180,17 @@ public class Ex3Algo implements PacManAlgo {
      * @param distanceMap The current all distance map
      * @param pacman The current position of the PacMan
      * @param ghost The closest ghost
+     * @param goal The strategy string ("run", "hunt", "green", "pink")
      * @param code The colors code
      * @param obsColor The obstacle color
      *
-     * @return A path to run away
+     * @return A path to target avoiding ghosts
      */
-    public Pixel2D[] findEscapePath(Map2D board, Map2D distanceMap, Pixel2D pacman, Pixel2D ghost, int code, int obsColor) {
+    public Pixel2D[] findSmartPath(Map2D board, Map2D distanceMap, Pixel2D pacman, Pixel2D ghost,String goal, int code, int obsColor) {
         java.util.Map<Pixel2D, Integer> originalValues = new java.util.HashMap<>();
+        int[][] directions = {{0, 0}, {0, 1}, {0, -1}, {1, 0}, {-1, 0}};
 
-        int[][] directions = {{0,0}, {0,1}, {0,-1}, {1,0}, {-1,0}};
-
+        int targetColor = Objects.equals(goal, "green") ? Game.getIntColor(Color.GREEN, code) : Game.getIntColor(Color.PINK, code);;
         int width = board.getWidth();
         int height = board.getHeight();
 
@@ -222,7 +213,7 @@ public class Ex3Algo implements PacManAlgo {
             board.setPixel(nx, ny, obsColor);
         }
 
-        Pixel2D target = getClosest(board, distanceMap, Game.getIntColor(Color.PINK, code));
+        Pixel2D target = getClosest(board, distanceMap, targetColor);
         Pixel2D[] path = board.shortestPath(pacman, target, obsColor, GameInfo.CYCLIC_MODE);
 
         // restore original map
@@ -230,12 +221,11 @@ public class Ex3Algo implements PacManAlgo {
             board.setPixel(entry.getKey().getX(), entry.getKey().getY(), entry.getValue());
         }
 
-        if(path == null){
-            path = panicMode(board, pacman, ghost,obsColor);
+        if (path == null) {
+            path = panicMode(board, pacman, ghost, obsColor);
         }
         return path;
     }
-
 
     /**
      * Finds the single best move to maximize distance from the ghost
@@ -247,6 +237,8 @@ public class Ex3Algo implements PacManAlgo {
      * @param obsColor The obstacle color
      */
     public Pixel2D[] panicMode(Map2D board, Pixel2D pacman, Pixel2D ghost, int obsColor) {
+        if (ghost == null) return null;
+
         int width = board.getWidth();
         int height = board.getHeight();
 
@@ -301,6 +293,7 @@ public class Ex3Algo implements PacManAlgo {
      * @param pacman The Pacman current position.
      * @param ghosts Array of GhostCL
      * @param code Array of GhostCL
+     *
      * @return A pixel of the closest ghost
      */
     public GhostCL getClosestGhost(Pixel2D pacman, GhostCL[] ghosts, int code) {
@@ -317,7 +310,7 @@ public class Ex3Algo implements PacManAlgo {
 
             if (currDist < minDist) {
                 minDist = currDist;
-                ghost =  ghosts[i];
+                ghost = ghosts[i];
             }
         }
         return ghost;
@@ -332,20 +325,21 @@ public class Ex3Algo implements PacManAlgo {
      * @param ghost The closest ghost pixel
      * @param code The code of colors
      * @param obsColor Obstacle color of the game
+     *
      * @return A number of the distance of the closest ghost
      */
-    public boolean isGreenClose(Map2D board, Map2D distanceMap, Pixel2D pacman, Pixel2D ghost, int code, int obsColor ) {
-        if(board == null || distanceMap == null || pacman == null || ghost == null) return false;
+    public boolean isGreenClose(Map2D board, Map2D distanceMap, Pixel2D pacman, Pixel2D ghost, int code, int obsColor) {
+        if (board == null || distanceMap == null || pacman == null || ghost == null) return false;
 
         Pixel2D green = getClosest(board, distanceMap, Game.getIntColor(Color.GREEN, code));
-        if(green == null) return false;
-        int closetsGhostDistance = distanceMap.getPixel(ghost.getX(),ghost.getY());
-        int closetsGreenDistance = distanceMap.getPixel(green.getX(),green.getY());
+        if (green == null) return false;
+        int closetsGhostDistance = distanceMap.getPixel(ghost.getX(), ghost.getY());
+        int closetsGreenDistance = distanceMap.getPixel(green.getX(), green.getY());
 
-        if(closetsGreenDistance > GameInfo.MAX_GREEN_DISTANCE)
+        if (closetsGreenDistance > GameInfo.MAX_GREEN_DISTANCE)
             return false;
 
-        if(!sameDirection(board, pacman, green, ghost, obsColor))
+        if (!sameDirection(board, pacman, green, ghost, obsColor))
             return true;
 
         return (closetsGreenDistance < (closetsGhostDistance / 2));
@@ -357,17 +351,24 @@ public class Ex3Algo implements PacManAlgo {
      * @param board The board map
      * @param distanceMap An all distance common.Map of current board
      * @param color required color to search the closest
+     *
      * @return the closest asking element
      */
     public Pixel2D getClosest(Map2D board, Map2D distanceMap, int color) {
-        if(board == null || distanceMap == null) return null;
+        if (board == null || distanceMap == null) return null;
 
         Pixel2D closest = null;
-        for(int i = 0; i < board.getWidth(); i++) {
-            for(int j = 0; j < board.getHeight(); j++) {
-                if(board.getPixel(i,j) == color)
-                  if(closest == null || distanceMap.getPixel(i,j) < distanceMap.getPixel(closest)){
-                    closest = new Index2D(i,j);
+        int minDistance = Integer.MAX_VALUE;
+
+        for (int i = 0; i < board.getWidth(); i++) {
+            for (int j = 0; j < board.getHeight(); j++) {
+
+                if (board.getPixel(i, j) == color) {
+                    int dist = distanceMap.getPixel(i, j);
+                    if (dist > 0 && dist < minDistance) {
+                        minDistance = dist;
+                        closest = new Index2D(i, j);
+                    }
                 }
             }
         }
@@ -383,9 +384,10 @@ public class Ex3Algo implements PacManAlgo {
      * @param dest1 The first destination
      * @param dest2 The second destination
      * @param obsColor Obstacle color of the game
+     *
      * @return boolean sameDirection value
      */
     public boolean sameDirection(Map2D board, Pixel2D src, Pixel2D dest1, Pixel2D dest2, int obsColor) {
-        return (board.shortestPath(src,dest1, obsColor, GameInfo.CYCLIC_MODE)[1].equals(board.shortestPath(src,dest2, obsColor, GameInfo.CYCLIC_MODE)[1]));
+        return (board.shortestPath(src, dest1, obsColor, GameInfo.CYCLIC_MODE)[1].equals(board.shortestPath(src, dest2, obsColor, GameInfo.CYCLIC_MODE)[1]));
     }
 }

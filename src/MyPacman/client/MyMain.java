@@ -1,5 +1,6 @@
 package MyPacman.client;
 
+import Algorithms.MyAlgo;
 import MyPacman.server.MyPacmanGame;
 import MyPacman.server.MyGame;
 
@@ -13,7 +14,7 @@ public class MyMain {
         MyPacmanGame game = new MyGame();
 
         game.init();
-        MyAlgo man = new MyAlgo();
+        Algorithms.MyAlgo man = new MyAlgo();
 
         while(game.getStatus() != MyGame.DONE) {
             _cmd = game.getKeyChar();
