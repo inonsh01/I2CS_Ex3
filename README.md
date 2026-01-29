@@ -184,8 +184,11 @@ class Index2D implements Pixel2D {
 ## Video Demonstration
 ## 🎥 Video Demonstrations
 
-### The Algorithm
+### The Algorithm Explanation
 [![Watch Video 1](https://img.youtube.com/vi/LDVP_QkELck/0.jpg)](https://youtube.com/shorts/LDVP_QkELck)
 
 ### Gameplay & Results
 [![Watch Video 1](https://img.youtube.com/vi/nyJoeLRAtuE/0.jpg)](https://youtube.com/shorts/nyJoeLRAtuE)
+
+### My Pacman Implementation (Server Side)
+[![Watch Video 1](https://img.youtube.com/vi/yScmK6qe5AY/0.jpg)](https://youtube.com/shorts/yScmK6qe5AY?feature=share)
