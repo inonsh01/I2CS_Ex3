@@ -190,7 +190,7 @@ class Index2D implements Pixel2D {
 ## 🎥 Video Demonstrations
 
 ### The Algorithm Explanation
-[![Watch Video 1](https://img.youtube.com/vi/LDVP_QkELck/0.jpg)](https://youtube.com/shorts/LDVP_QkELck)
+[![Watch Video 1](https://img.youtube.com/vi/c3PSiXimz6Q/0.jpg)](https://youtu.be/c3PSiXimz6Q)
 
 ### Gameplay & Results
 [![Watch Video 1](https://img.youtube.com/vi/nyJoeLRAtuE/0.jpg)](https://youtube.com/shorts/nyJoeLRAtuE)
