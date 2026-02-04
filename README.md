@@ -22,34 +22,31 @@ function move(game):
     dist[][] = allDistance()
     goal = "pink"
     
-    if(closestGhostDistance < SAFETY_RANGE)
-        if(closestGhost.remainTimeAsEatable(code) > MIN_TIME_EATABLE)
-            if(pacPos.distance2D(closestGhostPixel) < GameInfo.TOO_CLOSE)
+    if(distToGhost < SAFETY_RANGE)
+        if(closestGhost.remainTimeAsEatable(code) > MIN_TIME_EATABLE && distToGhost < HUNT_RANGE)
                 goal = "hunt";
         else if(isGreenClose(dist))
             goal = "green"
-        else
-            goal = "run"
     return getDirection(goal,dist)
 ```
 
 ### Calculate Direction 
 ```
 function getDirection(goal,dist):
+    if(goal == "hunt")
+            path = board.shortestPath(pacman, closestGhost)
+    else 
+        color = switch (goal) 
+                    case "pink" -> getIntColor(pink)
+                    case "green" -> getIntColor(green)
+                    default -> color
+                    
+        path = findSmartPath(board, distanceMap, pacman, closestGhost, goal, code, obsColor)
 
-    path = shortestPath(pacman, getClosest(goal, dist))
-    if(goal == "run")
-            path = findEscapePath(pacman, nearestGhost, nearestPink)
-    else if(goal = "hunt")
-            path = board.shortestPath(closestGhost)
-    else
-        path = board.shortestPath(goal == "pink" ? pink : green);
-        
-    if(path == null || path.size() <= 1)
+    if(path == null || path.length <= 1)
         return random // explode :)
         
-    nextPosition = path[1]
-    moveToPosition(nextPosition)
+    return Game.(nextDirection(path[1]))
 ```
 ### Target Selection
 ```
@@ -79,17 +76,25 @@ function isGreenClose(dist):
 ### Escape Algorithm
 ```
 // find path avoiding ghost by define them as obstacle
-function findEscapePath(pacman, ghost, dist):
-    originalValue = board[ghostPos.x][ghostPos.y]
+function findSmartPath(board, pacman, ghost, targetColor, obs_color)
+
+    ghostArea = get_valid_neighbors(ghost) 
     
-    board[ghostPos.x][ghostPos.y] = obsColor 
-    path = shortestPath(pacman, getClosest("pink", dist))
-    
-    // restore board
-    board[ghostPos.x][ghostPos.y] = originalValue
-    
-    if(path == null)
-        path = panikMode()
+    // save original values and mark as obstacle
+    for cell in ghost_area
+        saved_pixels[cell] = board[cell]
+        board[cell] = obs_color 
+
+    // find Shortest Path
+    targetPixel = getClosestTarget(board, target_color)
+    path = shortestPath(pacman, target_pixel)
+
+    // restore map
+    for cell, value in saved_pixels.items():
+        board[cell] = value
+
+    if path is empty
+        return panic_mode(board, pacman, ghost)
     return path
    
 // find the best safe path as a last resort   
@@ -172,7 +177,7 @@ class Index2D implements Pixel2D {
 - `SAFETY_RANGE = 5` - Minimum safe distance from ghosts
 - `MAX_GREEN_DISTANCE = 5` - Maximum distance to consider green dots
 - `MIN_TIME_EATABLE = 2` - Minimum time for chasing after ghosts
-- `TOO_CLOSE = 2` - Distance from ghost for hunting
+- `HUNT_RANGE = 2` - Distance from ghost for hunting
 
 ## Game Screenshots
 ![Normal Gameplay](images/normal_mode_example.png)

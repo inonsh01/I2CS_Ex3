@@ -20,6 +20,7 @@ public class GameInfo {
 	public static final PacManAlgo ALGO = _myAlgo;
     public static final int SAFETY_RANGE = (int) Math.floor(CASE_SCENARIO * 2.5);
     public static final int HUNT_RANGE = 2;
+    public static final double MIN_TIME_EATABLE = 1.5;
     public static final int MAX_GREEN_DISTANCE = 7;
     public static final int MAP_SIZE = 15;
     public static final int MAP_SIZE_PX = 800;
