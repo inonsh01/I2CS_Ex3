@@ -94,7 +94,7 @@ public class MyAlgo {
 
             // THREAT DETECTED
             if (distToGhost < GameInfo.SAFETY_RANGE) {
-                if (closestGhost.remainTimeAsEatable(code) >= 1.5 && distToGhost < GameInfo.TOO_CLOSE) {
+                if (closestGhost.remainTimeAsEatable(code) >= 1.5 && distToGhost < GameInfo.HUNT_RANGE) {
                     goal = "hunt";
                 }
                 // if ghost is dangerous

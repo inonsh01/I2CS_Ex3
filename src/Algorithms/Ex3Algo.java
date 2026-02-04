@@ -46,44 +46,50 @@ public class Ex3Algo implements PacManAlgo {
      * @return The next move direction
      */
     public int move(PacmanGame game) {
-        int code = 0, pink, black, green;
+        // define vars
+        int code = 0, blue, pink, black, green;
         int[][] board = game.getGame(0);
+
+        String goal = "pink";
         String pos = game.getPos(code).toString();
-        int blue = Game.getIntColor(Color.BLUE, code);
+
         GhostCL[] ghosts = game.getGhosts(code);
+
+        blue = Game.getIntColor(Color.BLUE, code);
+        pink = Game.getIntColor(Color.PINK, code);
+        black = Game.getIntColor(Color.BLACK, code);
+        green = Game.getIntColor(Color.GREEN, code);
 
         if (_count == 0 || _count == 300) {
             printBoard(board);
-            pink = Game.getIntColor(Color.PINK, code);
-            black = Game.getIntColor(Color.BLACK, code);
-            green = Game.getIntColor(Color.GREEN, code);
             System.out.println("Blue=" + blue + ", Pink=" + pink + ", Black=" + black + ", Green=" + green);
             System.out.println("Pacman coordinate: " + pos);
             printGhosts(ghosts);
         }
         _count++;
 
-        Map2D _map = new Map(board);
+        // get pacman coordinate
         String[] posArr = pos.split(",");
         int pacX = Integer.parseInt(posArr[0]);
         int pacY = Integer.parseInt(posArr[1]);
         Pixel2D pacPos = new Index2D(pacX, pacY);
 
+        // get all distance map
+        Map2D _map = new Map(board);
         Map2D distanceMap = _map.allDistance(pacPos, blue, GameInfo.CYCLIC_MODE);
 
-        String goal = "pink";
+        // get closest ghost
         Pixel2D closestGhostPixel = null;
         GhostCL closestGhost = getClosestGhost(pacPos, ghosts, code);
 
         if (closestGhost != null) {
+            // get distance from closets ghost
             String[] currGhPosArr = closestGhost.getPos(code).split(",");
-            int currGhX = Integer.parseInt(currGhPosArr[0]);
-            int currGhY = Integer.parseInt(currGhPosArr[1]);
-            closestGhostPixel = new Index2D(currGhX, currGhY);
+            closestGhostPixel = new Index2D(Integer.parseInt(currGhPosArr[0]), Integer.parseInt(currGhPosArr[1]));
             double distToGhost = pacPos.distance2D(closestGhostPixel);
 
             if (distToGhost < GameInfo.SAFETY_RANGE) {
-                if (closestGhost.remainTimeAsEatable(code) >= 1.5 && distToGhost < GameInfo.TOO_CLOSE) {
+                if (closestGhost.remainTimeAsEatable(code) >= 1.5 && distToGhost < GameInfo.HUNT_RANGE) {
                         goal = "hunt";
                 } else if (isGreenClose(_map, distanceMap, pacPos, closestGhostPixel, code, blue)) {
                     goal = "green";
@@ -151,18 +157,13 @@ public class Ex3Algo implements PacManAlgo {
             path = findSmartPath(board, distanceMap, pacman, closestGhost, goal, code, obsColor);
         }
 
-        // if still no path -> explode :)
-        if (path == null || path.length < 1) {
+        // if still no path or pacman reached the goal -> explode :)
+        if (path == null || path.length <= 1) {
             return randomDir();
         }
 
-        // pacman reached the goal
-        if (path.length == 1) {
-            return Game.UP; // no reason
-        }
-
+        // calculate which direction pacman should go.
         Pixel2D nextMove = path[1];
-
         int dx = nextMove.getX() - pacman.getX();
         int dy = nextMove.getY() - pacman.getY();
         if (dx == 1 || (GameInfo.CYCLIC_MODE && dx < -1)) return Game.RIGHT;
@@ -194,6 +195,7 @@ public class Ex3Algo implements PacManAlgo {
         int width = board.getWidth();
         int height = board.getHeight();
 
+        // mark ghost surroundings as obstacles
         for (int[] dir : directions) {
             int nx, ny;
             if (GameInfo.CYCLIC_MODE) {
@@ -203,16 +205,19 @@ public class Ex3Algo implements PacManAlgo {
                 nx = ghost.getX() + dir[0];
                 ny = ghost.getY() + dir[1];
 
+                // if next X or next Y is out of bounds
                 if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
                     continue;
                 }
             }
 
+            // store original values and paint next X and Y with obstacle color
             Pixel2D p = new Index2D(nx, ny);
             originalValues.put(p, board.getPixel(nx, ny));
             board.setPixel(nx, ny, obsColor);
         }
 
+        // get shortest path (BFS)
         Pixel2D target = getClosest(board, distanceMap, targetColor);
         Pixel2D[] path = board.shortestPath(pacman, target, obsColor, GameInfo.CYCLIC_MODE);
 
@@ -221,6 +226,7 @@ public class Ex3Algo implements PacManAlgo {
             board.setPixel(entry.getKey().getX(), entry.getKey().getY(), entry.getValue());
         }
 
+        // if cannot blocked
         if (path == null) {
             path = panicMode(board, pacman, ghost, obsColor);
         }
@@ -242,7 +248,7 @@ public class Ex3Algo implements PacManAlgo {
         int width = board.getWidth();
         int height = board.getHeight();
 
-        // possible moves: Up, Down, Right, Left
+        // possible moves: up, Down, Right, Left
         int[][] moves = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
 
         Pixel2D bestMove = null;
