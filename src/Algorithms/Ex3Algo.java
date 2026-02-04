@@ -89,7 +89,7 @@ public class Ex3Algo implements PacManAlgo {
             double distToGhost = pacPos.distance2D(closestGhostPixel);
 
             if (distToGhost < GameInfo.SAFETY_RANGE) {
-                if (closestGhost.remainTimeAsEatable(code) >= 1.5 && distToGhost < GameInfo.HUNT_RANGE) {
+                if (closestGhost.remainTimeAsEatable(code) >= GameInfo.MIN_TIME_EATABLE && distToGhost < GameInfo.HUNT_RANGE) {
                         goal = "hunt";
                 } else if (isGreenClose(_map, distanceMap, pacPos, closestGhostPixel, code, blue)) {
                     goal = "green";
